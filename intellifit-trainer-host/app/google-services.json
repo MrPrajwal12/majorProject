@@ -1,0 +1,48 @@
+{
+  "project_info": {
+    "project_number": "740180147767",
+    "project_id": "fitnessapp-7a2f1",
+    "storage_bucket": "fitnessapp-7a2f1.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:740180147767:android:76ecd949e601efd63549b2",
+        "android_client_info": {
+          "package_name": "com.example.intellifit_trainer"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyC9Fn5i0RwGKBa-GIk4NS80OYjBl8fOVzc"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:740180147767:android:58117ed032bb229f3549b2",
+        "android_client_info": {
+          "package_name": "com.project.intellifit_trainer"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyC9Fn5i0RwGKBa-GIk4NS80OYjBl8fOVzc"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
