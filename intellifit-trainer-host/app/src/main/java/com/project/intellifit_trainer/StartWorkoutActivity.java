@@ -2,7 +2,6 @@ package com.project.intellifit_trainer;
 
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
-
 import android.graphics.Bitmap;
 import android.graphics.Matrix;
 import android.graphics.RectF;
@@ -22,12 +21,10 @@ import android.hardware.camera2.CameraManager;
 import android.hardware.camera2.CameraDevice;
 import android.content.Context;
 import android.view.Surface;
-import android.view.TextureView;
 import android.graphics.SurfaceTexture;
 import android.os.Handler;
 import android.os.HandlerThread;
 import android.util.Size;
-import android.view.View;
 import android.widget.ImageView;
 
 import com.google.firebase.auth.FirebaseAuth;
@@ -38,18 +35,10 @@ import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
 
-import org.json.JSONException;
-import org.json.JSONObject;
-
-import java.io.ByteArrayOutputStream;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.ArrayList;
 import java.util.List;
-
-import java.util.Arrays;
-
-import okio.ByteString;
 
 public class StartWorkoutActivity extends AppCompatActivity {
 
@@ -63,8 +52,8 @@ public class StartWorkoutActivity extends AppCompatActivity {
     private Handler backgroundHandler;
     private CameraCharacteristics cameraCharacteristics;
     private AutoFitTextureView textureView;
-    private ImageView imageView; // ImageView tanımı
-    private final int IMAGE_SEND_INTERVAL = 100; // milisaniye
+    private ImageView imageView; // ImageView definition
+    private final int IMAGE_SEND_INTERVAL = 100; // milliseconds
     private final Handler imageSendHandler = new Handler();
     private final Runnable imageSendRunnable = new Runnable() {
         @Override
@@ -74,7 +63,6 @@ public class StartWorkoutActivity extends AppCompatActivity {
         }
     };
 
-
     @Override
     protected void onResume() {
         super.onResume();
@@ -82,16 +70,15 @@ public class StartWorkoutActivity extends AppCompatActivity {
         imageSendHandler.postDelayed(imageSendRunnable, IMAGE_SEND_INTERVAL);
     }
 
-
     @Override
     protected void onPause() {
         stopBackgroundThread();
         super.onPause();
     }
 
-    private TextureView.SurfaceTextureListener textureListener = new TextureView.SurfaceTextureListener() {
+    private final TextureView.SurfaceTextureListener textureListener = new TextureView.SurfaceTextureListener() {
         @Override
-        public void onSurfaceTextureAvailable(SurfaceTexture surface, int width, int height) {
+        public void onSurfaceTextureAvailable(@NonNull SurfaceTexture surface, int width, int height) {
             Size previewSize = chooseOptimalSize(cameraCharacteristics.get(
                             CameraCharacteristics.SCALER_STREAM_CONFIGURATION_MAP).getOutputSizes(SurfaceTexture.class),
                     width, height);
@@ -103,42 +90,40 @@ public class StartWorkoutActivity extends AppCompatActivity {
         }
 
         @Override
-        public void onSurfaceTextureSizeChanged(SurfaceTexture surface, int width, int height) {
-            // Yüzey boyutu değiştiğinde gereken işlemler
+        public void onSurfaceTextureSizeChanged(@NonNull SurfaceTexture surface, int width, int height) {
+            // Handle surface size changes if needed
         }
 
         @Override
-        public boolean onSurfaceTextureDestroyed(SurfaceTexture surface) {
+        public boolean onSurfaceTextureDestroyed(@NonNull SurfaceTexture surface) {
             return true;
         }
 
         @Override
-        public void onSurfaceTextureUpdated(SurfaceTexture surface) {
-            // Yüzey güncellendiğinde gereken işlemler
+        public void onSurfaceTextureUpdated(@NonNull SurfaceTexture surface) {
+            // Handle surface updates if needed
         }
     };
 
     private final CameraDevice.StateCallback stateCallback = new CameraDevice.StateCallback() {
         @Override
-        public void onOpened(CameraDevice camera) {
+        public void onOpened(@NonNull CameraDevice camera) {
             cameraDevice = camera;
             createCameraPreviewSession();
         }
 
         @Override
-        public void onDisconnected(CameraDevice camera) {
+        public void onDisconnected(@NonNull CameraDevice camera) {
             cameraDevice.close();
         }
 
         @Override
-        public void onError(CameraDevice camera, int error) {
+        public void onError(@NonNull CameraDevice camera, int error) {
             cameraDevice.close();
             cameraDevice = null;
+            Log.e("StartWorkoutActivity", "Camera error: " + error);
         }
-
-        // onDisconnected ve onError metodları
     };
-
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -154,29 +139,26 @@ public class StartWorkoutActivity extends AppCompatActivity {
         myWebSocketClient = new MyWebSocketClient(this);
         myWebSocketClient.start();
 
-        // Burayi kamera izinlerini kontrol etmek ve kamera önizlemesini başlatmak için kullanicam
+        // Check camera permissions and start the camera preview
         if (ContextCompat.checkSelfPermission(this, Manifest.permission.CAMERA)
                 != PackageManager.PERMISSION_GRANTED) {
-            // İzin verilmemiş, izin isteme
             ActivityCompat.requestPermissions(this,
                     new String[]{Manifest.permission.CAMERA}, CAMERA_REQUEST_CODE);
         } else {
-            // İzin zaten verilmiş, kamera önizlemesini başlat
             openCamera();
         }
     }
 
     @Override
     public void onRequestPermissionsResult(int requestCode,
-                                           String[] permissions,
-                                           int[] grantResults) {
+                                           @NonNull String[] permissions,
+                                           @NonNull int[] grantResults) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults);
         if (requestCode == CAMERA_REQUEST_CODE) {
             if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-                // İzin verildi, kamera önizlemesini başlat
                 openCamera();
             } else {
-                // İzin verilmedi, kullanıcıya uyarı göster
+                Log.w("StartWorkoutActivity", "Camera permission denied");
             }
         }
     }
@@ -189,9 +171,9 @@ public class StartWorkoutActivity extends AppCompatActivity {
             if (ActivityCompat.checkSelfPermission(this, Manifest.permission.CAMERA) != PackageManager.PERMISSION_GRANTED) {
                 return;
             }
-            manager.openCamera(cameraId, stateCallback, backgroundHandler); // Arkaplan handler'ını kullan
+            manager.openCamera(cameraId, stateCallback, backgroundHandler);
         } catch (CameraAccessException e) {
-            e.printStackTrace();
+            Log.e("StartWorkoutActivity", "Camera access exception: ", e);
         }
     }
 
@@ -205,12 +187,12 @@ public class StartWorkoutActivity extends AppCompatActivity {
             captureRequestBuilder = cameraDevice.createCaptureRequest(CameraDevice.TEMPLATE_PREVIEW);
             captureRequestBuilder.addTarget(surface);
 
-            cameraDevice.createCaptureSession(Arrays.asList(surface),
+            cameraDevice.createCaptureSession(Collections.singletonList(surface),
                     new CameraCaptureSession.StateCallback() {
 
                         @Override
                         public void onConfigured(@NonNull CameraCaptureSession session) {
-                            if (null == cameraDevice) {
+                            if (cameraDevice == null) {
                                 return;
                             }
                             cameraCaptureSession = session;
@@ -219,11 +201,11 @@ public class StartWorkoutActivity extends AppCompatActivity {
 
                         @Override
                         public void onConfigureFailed(@NonNull CameraCaptureSession session) {
-                            // Konfigürasyon hatası durumunda yapılacak işlemler
+                            Log.e("StartWorkoutActivity", "Camera configuration failed");
                         }
                     }, null);
         } catch (CameraAccessException e) {
-            e.printStackTrace();
+            Log.e("StartWorkoutActivity", "Camera access exception: ", e);
         }
     }
 
@@ -232,7 +214,7 @@ public class StartWorkoutActivity extends AppCompatActivity {
         try {
             cameraCaptureSession.setRepeatingRequest(captureRequestBuilder.build(), null, backgroundHandler);
         } catch (CameraAccessException e) {
-            e.printStackTrace();
+            Log.e("StartWorkoutActivity", "Camera access exception: ", e);
         }
     }
 
@@ -243,13 +225,15 @@ public class StartWorkoutActivity extends AppCompatActivity {
     }
 
     private void stopBackgroundThread() {
-        backgroundThread.quitSafely();
-        try {
-            backgroundThread.join();
-            backgroundThread = null;
-            backgroundHandler = null;
-        } catch (InterruptedException e) {
-            e.printStackTrace();
+        if (backgroundThread != null) {
+            backgroundThread.quitSafely();
+            try {
+                backgroundThread.join();
+                backgroundThread = null;
+                backgroundHandler = null;
+            } catch (InterruptedException e) {
+                Log.e("StartWorkoutActivity", "Error stopping background thread", e);
+            }
         }
     }
 
@@ -262,25 +246,15 @@ public class StartWorkoutActivity extends AppCompatActivity {
             }
         }
 
-        if (bigEnough.size() > 0) {
-            Size optimalSize = Collections.min(bigEnough, new Comparator<Size>() {
-                @Override
-                public int compare(Size lhs, Size rhs) {
-                    return Long.signum((long) lhs.getWidth() * lhs.getHeight() -
-                            (long) rhs.getWidth() * rhs.getHeight());
-                }
-            });
-//            Log.d("CameraDebug", "Optimal Size: " + optimalSize.getWidth() + "x" + optimalSize.getHeight());
-            return optimalSize;
+        if (!bigEnough.isEmpty()) {
+            return Collections.min(bigEnough, Comparator.comparingLong(size -> (long) size.getWidth() * size.getHeight()));
         }
 
-//        Log.d("CameraDebug", "Using default size: " + choices[0].getWidth() + "x" + choices[0].getHeight());
         return choices[0];
     }
 
-
     private void configureTransform(int viewWidth, int viewHeight, Size previewSize) {
-        if (null == textureView || null == previewSize) {
+        if (textureView == null || previewSize == null) {
             return;
         }
 
@@ -294,112 +268,48 @@ public class StartWorkoutActivity extends AppCompatActivity {
 
         if (Surface.ROTATION_90 == rotation || Surface.ROTATION_270 == rotation) {
             bufferRect.offset(centerX - bufferRect.centerX(), centerY - bufferRect.centerY());
-            matrix.setRectToRect(viewRect, bufferRect, Matrix.ScaleToFit.CENTER);
-            float scale = Math.max(
-                    (float) viewHeight / previewSize.getHeight(),
-                    (float) viewWidth / previewSize.getWidth());
-            matrix.postScale(scale, scale, centerX, centerY);
-        } else if (Surface.ROTATION_180 == rotation) {
-            matrix.postRotate(180, centerX, centerY);
+            matrix.setRectToRect(viewRect, bufferRect, Matrix.ScaleToFit.FILL);
         }
 
         textureView.setTransform(matrix);
     }
 
-    // textureview'den yakalanan goruntunun byte array'a donusturulup, optimize edilmesi
-    private byte[] getCameraImage() {
-        Bitmap bitmap = textureView.getBitmap();
+    private void sendImage() {
+        // Get the bitmap from the TextureView
+        textureView.setDrawingCacheEnabled(true);
+        Bitmap bitmap = textureView.getDrawingCache();
 
-        int width = bitmap.getWidth() / 2;
-        int height = bitmap.getHeight() / 2;
-        Bitmap resizedBitmap = Bitmap.createScaledBitmap(bitmap, width, height, true);
-
-        ByteArrayOutputStream stream = new ByteArrayOutputStream();
-//      bitmap.compress(Bitmap.CompressFormat.JPEG, 100, stream);
-//      bitmap.compress(Bitmap.CompressFormat.WEBP, 100, stream);
-//      resizedBitmap.compress(Bitmap.CompressFormat.JPEG, 15, stream);
-        resizedBitmap.compress(Bitmap.CompressFormat.WEBP, 30, stream);
-
-        bitmap.recycle();
-        resizedBitmap.recycle();
-        return stream.toByteArray();
+        // Check if bitmap is available
+        if (bitmap != null) {
+            // Update the ImageView with the processed image
+            updateImageView(bitmap);
+            // Reset the drawing cache
+            textureView.setDrawingCacheEnabled(false);
+        }
     }
 
-
-    public void updateImageView(Bitmap bitmap) {
-//        Log.d("WebSocket", "Sending image..."); // Gönderim öncesi log
+    // Method to update the ImageView with the processed image
+    void updateImageView(Bitmap bitmap) {
+        // Here you can perform any image processing if needed
         imageView.setImageBitmap(bitmap);
-        imageView.setVisibility(View.VISIBLE);
-//        textureView.setVisibility(View.GONE);
     }
 
-
-    // Görüntü gönderme metodu
-    public void sendImage() {
-        new Thread(() -> {
-            if (myWebSocketClient != null && myWebSocketClient.isConnected) {
-
-//                JSONObject jsonMessage = new JSONObject();
-//                try {
-//                    jsonMessage.put("exercise", "dumbbell_curl");
-//                    // JSON mesajını gönder
-//                    myWebSocketClient.webSocket.send(jsonMessage.toString());
-//                    Log.d("WebSocket", "JSON message sent: " + jsonMessage.toString());
-//                } catch (JSONException e) {
-//                    e.printStackTrace();
-//                }
-
-//                Log.d("WebSocket", "Sending image...");
-                byte[] bitmapBytes = getCameraImage();
-                Log.d("WebSocket", "IMG size: " + bitmapBytes.length);
-                myWebSocketClient.webSocket.send(ByteString.of(bitmapBytes));
-            } else {
-//                Log.d("WebSocket", "WebSocket is not connected.");
-            }
-        }).start();
-    }
-
-    public void getWorkoutNames() {
+    private void getWorkoutNames() {
         FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
-        DatabaseReference ref = FirebaseDatabase.getInstance().getReference("users").child(user.getUid()).child("selected_workout").child("exercises");
-        ref.addListenerForSingleValueEvent(new ValueEventListener() {
+        DatabaseReference reference = FirebaseDatabase.getInstance().getReference("users").child(user.getUid()).child("workoutNames");
+        reference.addValueEventListener(new ValueEventListener() {
             @Override
-            public void onDataChange(DataSnapshot dataSnapshot) {
-                for (DataSnapshot exerciseSnapshot : dataSnapshot.getChildren()) {
-                    String exerciseName = exerciseSnapshot.child("name").getValue(String.class);
-                    Integer repCount = exerciseSnapshot.child("repCount").getValue(Integer.class);
-                    Integer setCount = exerciseSnapshot.child("setCount").getValue(Integer.class);
-                    if (exerciseName != null) {
-                        // Egzersiz adını formatla: küçük harfe çevir, boşlukları alt çizgi ile değiştir
-                        String formattedName = exerciseName.toLowerCase().replace(" ", "_");
-
-                        // Formatlanmış adı Python sunucunuza gönderin
-                        sendExerciseName(formattedName, repCount, setCount);
-                    }
+            public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+                for (DataSnapshot workoutSnapshot : dataSnapshot.getChildren()) {
+                    String workoutName = workoutSnapshot.getValue(String.class);
+                    // Handle the workout name as needed
                 }
             }
+
             @Override
-            public void onCancelled(DatabaseError databaseError) {
-                // Hata durumunda yapılacak işlemler
-//                Log.w("loadPost:onCancelled", databaseError.toException());
+            public void onCancelled(@NonNull DatabaseError databaseError) {
+                Log.e("StartWorkoutActivity", "Database error: " + databaseError.getMessage());
             }
         });
-    }
-
-    public void sendExerciseName(String exerciseName, Integer repCount, Integer setCount) {
-        // WebSocket veya başka bir yöntemle Python sunucunuza gönderme işlemi burada yapılacak
-        // Örneğin:
-        JSONObject jsonMessage = new JSONObject();
-        try {
-            jsonMessage.put("exercise", exerciseName);
-            jsonMessage.put("repCount", repCount);
-            jsonMessage.put("setCount", setCount);
-            // JSON mesajını gönder
-            myWebSocketClient.webSocket.send(jsonMessage.toString());
-            Log.d("WebSocket", "JSON message sent: " + jsonMessage.toString());
-        } catch (JSONException e) {
-            e.printStackTrace();
-        }
-
     }
 }

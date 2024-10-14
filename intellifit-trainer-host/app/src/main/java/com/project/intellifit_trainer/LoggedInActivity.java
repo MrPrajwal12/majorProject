@@ -1,28 +1,20 @@
 package com.project.intellifit_trainer;
 
 import androidx.annotation.NonNull;
-import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 
 import android.content.Intent;
 import android.os.Bundle;
-import android.text.TextUtils;
 import android.util.Log;
-import android.view.View;
 import android.widget.Button;
-import android.widget.EditText;
 import android.widget.TextView;
-import android.widget.Toast;
 
-import com.google.android.gms.tasks.OnCompleteListener;
-import com.google.android.gms.tasks.Task;
-import com.google.firebase.auth.AuthResult;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
-import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.DatabaseReference;
+import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
 
 public class LoggedInActivity extends AppCompatActivity {
@@ -35,7 +27,7 @@ public class LoggedInActivity extends AppCompatActivity {
     @Override
     protected void onResume() {
         super.onResume();
-        // Kullanıcı etkinliğe her döndüğünde seçili workout kontrolü yap
+        // Check selected workout whenever the user returns to the activity
         checkSelectedWorkout();
     }
 
@@ -58,67 +50,44 @@ public class LoggedInActivity extends AppCompatActivity {
         fetchUsername();
         checkSelectedWorkout();
 
-        logOut.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                FirebaseAuth.getInstance().signOut();
-                intent = new Intent(LoggedInActivity.this, MainActivity.class);
-                startActivity(intent);
-                finish();
-            }
+        logOut.setOnClickListener(v -> {
+            FirebaseAuth.getInstance().signOut();
+            intent = new Intent(LoggedInActivity.this, MainActivity.class);
+            startActivity(intent);
+            finish();
         });
 
-        support.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                intent = new Intent(LoggedInActivity.this, SupportActivity.class);
-                startActivity(intent);
-            }
+        support.setOnClickListener(v -> {
+            intent = new Intent(LoggedInActivity.this, SupportActivity.class);
+            startActivity(intent);
         });
 
-        myProfile.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                intent = new Intent(LoggedInActivity.this, MyProfileActivity.class);
-                startActivity(intent);
-            }
+        myProfile.setOnClickListener(v -> {
+            intent = new Intent(LoggedInActivity.this, MyProfileActivity.class);
+            startActivity(intent);
         });
 
-        learnExercises.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                intent = new Intent(LoggedInActivity.this, LearnExercisesActivity.class);
-                startActivity(intent);
-            }
+        learnExercises.setOnClickListener(v -> {
+            intent = new Intent(LoggedInActivity.this, LearnExercisesActivity.class);
+            startActivity(intent);
         });
 
-        createWorkout.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                intent = new Intent(LoggedInActivity.this, CreateWorkoutActivity.class);
-                startActivity(intent);
-            }
+        createWorkout.setOnClickListener(v -> {
+            intent = new Intent(LoggedInActivity.this, CreateWorkoutActivity.class);
+            startActivity(intent);
         });
 
-        myWorkouts.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                intent = new Intent(LoggedInActivity.this, MyWorkoutsActivity.class);
-                startActivity(intent);
-            }
+        myWorkouts.setOnClickListener(v -> {
+            intent = new Intent(LoggedInActivity.this, MyWorkoutsActivity.class);
+            startActivity(intent);
         });
 
-        startWorkout.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                intent = new Intent(LoggedInActivity.this, StartWorkoutActivity.class);
-                startActivity(intent);
-            }
+        startWorkout.setOnClickListener(v -> {
+            intent = new Intent(LoggedInActivity.this, StartWorkoutActivity.class);
+            startActivity(intent);
         });
-
-
-
     }
+
     private void fetchUsername() {
         FirebaseUser user = mAuth.getCurrentUser();
         if (user != null) {
@@ -130,7 +99,8 @@ public class LoggedInActivity extends AppCompatActivity {
                 public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
                     if (dataSnapshot.exists()) {
                         String username = dataSnapshot.child("username").getValue(String.class);
-                        welcomeText.setText("Welcome back, " + username + "!");
+                        String welcomeMessage = getString(R.string.welcome_message, username);
+                        welcomeText.setText(welcomeMessage);
                     }
                 }
 
@@ -150,26 +120,23 @@ public class LoggedInActivity extends AppCompatActivity {
 
             selectedWorkoutRef.addListenerForSingleValueEvent(new ValueEventListener() {
                 @Override
-                public void onDataChange(DataSnapshot dataSnapshot) {
+                public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
                     if (dataSnapshot.exists()) {
-                        // Eğer selected_workout varsa, butonu etkinleştir ve arkaplanını güncelle
+                        // If selected_workout exists, enable the button and update its background
                         startWorkout.setEnabled(true);
                         startWorkout.setBackgroundResource(R.drawable.button_background);
                     } else {
-                        // Eğer selected_workout yoksa, butonu devre dışı bırak ve arkaplanını güncelle
+                        // If selected_workout does not exist, disable the button and update its background
                         startWorkout.setEnabled(false);
                         startWorkout.setBackgroundResource(R.drawable.button_disabled);
                     }
                 }
 
                 @Override
-                public void onCancelled(DatabaseError databaseError) {
+                public void onCancelled(@NonNull DatabaseError databaseError) {
                     Log.e("LoggedInActivity", "Error checking selected workout", databaseError.toException());
                 }
             });
         }
     }
-
-
-
 }

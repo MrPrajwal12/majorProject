@@ -1,10 +1,10 @@
 package com.project.intellifit_trainer;
 
-import android.content.DialogInterface;
+
 import android.content.Intent;
 import android.os.Bundle;
 import android.text.InputType;
-import android.view.View;
+
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.Toast;
@@ -25,21 +25,32 @@ import java.util.List;
 import java.util.Map;
 
 public class CreateWorkoutActivity extends AppCompatActivity {
-    private RecyclerView rvExercises;
     private WorkoutAdapter adapter;
-    private List<WorkoutExercise> exercisesToSave;
     private List<WorkoutExercise> workoutExercisesList;
-    Intent intent;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_createworkout);
 
-        rvExercises = findViewById(R.id.rvExercises);
+        RecyclerView rvExercises = findViewById(R.id.rvExercises);
         rvExercises.setLayoutManager(new LinearLayoutManager(this));
 
         workoutExercisesList = new ArrayList<>();
+        initializeWorkoutExercises();
+
+        // Use lambda expression for the OnItemClickListener
+        adapter = new WorkoutAdapter(workoutExercisesList, workoutExercise -> {
+            // Handle exercise item click if needed
+        });
+        rvExercises.setAdapter(adapter);
+
+        Button btnSaveWorkout = findViewById(R.id.btnSaveWorkout);
+        // Use lambda expression for the OnClickListener
+        btnSaveWorkout.setOnClickListener(view -> showWorkoutNameDialog());
+    }
+
+    private void initializeWorkoutExercises() {
         workoutExercisesList.add(new WorkoutExercise("Push Up", "Chest, Triceps", R.drawable.push_up_image));
         workoutExercisesList.add(new WorkoutExercise("Dumbbell Curl", "Biceps, Forearms", R.drawable.dumbbell_curl_image));
         workoutExercisesList.add(new WorkoutExercise("High Knees", "Quads, Calves", R.drawable.high_knees_image));
@@ -50,43 +61,51 @@ public class CreateWorkoutActivity extends AppCompatActivity {
         workoutExercisesList.add(new WorkoutExercise("Squat", "Quads, Hamstrings", R.drawable.squat_image));
         workoutExercisesList.add(new WorkoutExercise("Jumping Rope", "Calves, Forearms", R.drawable.jumping_rope_image));
         workoutExercisesList.add(new WorkoutExercise("Jumping Jack", "Total Body", R.drawable.jumping_jack_image));
-
-        adapter = new WorkoutAdapter(workoutExercisesList, new WorkoutAdapter.OnItemClickListener() {
-            @Override
-            public void onItemClick(WorkoutExercise workoutExercise) {
-                // İlgili işlem
-            }
-        });
-        rvExercises.setAdapter(adapter);
-        // Adapter oluşturulduktan sonra exercisesToSave'i başlat
-        exercisesToSave = adapter.getAddedExercises();
-
-        Button btnSaveWorkout = findViewById(R.id.btnSaveWorkout);
-        btnSaveWorkout.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                showWorkoutNameDialog();
-            }
-        });
     }
 
     private void saveWorkout(String workoutName) {
+        List<WorkoutExercise> exercisesToSave = adapter.getAddedExercises(); // Get added exercises locally
+
         if (exercisesToSave.isEmpty()) {
             Toast.makeText(this, "No exercises selected.\nPlease add exercises before saving.", Toast.LENGTH_SHORT).show();
             return;
         }
 
         FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
-        String userID = user.getUid();
+        String userID = user != null ? user.getUid() : null; // Handle potential null userID
+
+        if (userID == null) {
+            Toast.makeText(this, "User ID is null. Please log in again.", Toast.LENGTH_SHORT).show();
+            return;
+        }
 
         DatabaseReference databaseRef = FirebaseDatabase.getInstance().getReference("users").child(userID).child("workouts");
-        String workoutId = databaseRef.push().getKey();
+        String workoutId = databaseRef.push().getKey(); // This could be null if the push fails
 
+        // Check if workoutId is null before proceeding
+        if (workoutId == null) {
+            Toast.makeText(this, "Failed to create workout ID. Please try again.", Toast.LENGTH_SHORT).show();
+            return;
+        }
+
+        // Call the extracted method to get workout data
+        Map<String, Object> workoutData = createWorkoutData(workoutName, exercisesToSave);
+
+        databaseRef.child(workoutId).setValue(workoutData)
+                .addOnSuccessListener(aVoid -> Toast.makeText(this, "Workout saved successfully!", Toast.LENGTH_SHORT).show())
+                .addOnFailureListener(e -> Toast.makeText(this, "Failed to save workout.", Toast.LENGTH_SHORT).show());
+
+        Intent intent = new Intent(CreateWorkoutActivity.this, CreateWorkoutActivity.class);
+        startActivity(intent);
+        finish();
+    }
+
+    private Map<String, Object> createWorkoutData(String workoutName, List<WorkoutExercise> exercisesToSave) {
         Map<String, Object> workoutData = new HashMap<>();
         workoutData.put("workoutName", workoutName);
 
         List<Map<String, Object>> exercisesData = new ArrayList<>();
-        for (WorkoutExercise exercise : adapter.getAddedExercises()) {
+        for (WorkoutExercise exercise : exercisesToSave) {
             Map<String, Object> exerciseData = new HashMap<>();
             exerciseData.put("name", exercise.getName());
             exerciseData.put("repCount", exercise.getRepCount());
@@ -95,15 +114,8 @@ public class CreateWorkoutActivity extends AppCompatActivity {
         }
         workoutData.put("exercises", exercisesData);
 
-        databaseRef.child(workoutId).setValue(workoutData)
-                .addOnSuccessListener(aVoid -> Toast.makeText(this, "Workout saved successfully!", Toast.LENGTH_SHORT).show())
-                .addOnFailureListener(e -> Toast.makeText(this, "Failed to save workout.", Toast.LENGTH_SHORT).show());
-
-        intent = new Intent(CreateWorkoutActivity.this, CreateWorkoutActivity.class);
-        startActivity(intent);
-        finish();
+        return workoutData;
     }
-
 
     private void showWorkoutNameDialog() {
         AlertDialog.Builder builder = new AlertDialog.Builder(this);
@@ -113,22 +125,14 @@ public class CreateWorkoutActivity extends AppCompatActivity {
         input.setInputType(InputType.TYPE_CLASS_TEXT);
         builder.setView(input);
 
-        // "Save" butonunu ayarla
-        builder.setPositiveButton("Save", new DialogInterface.OnClickListener() {
-            @Override
-            public void onClick(DialogInterface dialog, int which) {
-                String workoutName = input.getText().toString();
-                saveWorkout(workoutName);
-            }
+        // Use lambda expression for the DialogInterface.OnClickListener
+        builder.setPositiveButton("Save", (dialog, which) -> {
+            String workoutName = input.getText().toString();
+            saveWorkout(workoutName);
         });
 
-        // "Cancel" butonunu ayarla
-        builder.setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
-            @Override
-            public void onClick(DialogInterface dialog, int which) {
-                dialog.cancel();
-            }
-        });
+        // Use lambda expression for the DialogInterface.OnClickListener
+        builder.setNegativeButton("Cancel", (dialog, which) -> dialog.cancel());
         builder.show();
     }
 }

@@ -1,7 +1,6 @@
 package com.project.intellifit_trainer;
 
 import android.content.Context;
-import android.graphics.Matrix;
 import android.util.AttributeSet;
 import android.util.Log;
 import android.view.TextureView;

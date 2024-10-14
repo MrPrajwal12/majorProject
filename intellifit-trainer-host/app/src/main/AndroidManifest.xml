@@ -3,12 +3,9 @@
     xmlns:tools="http://schemas.android.com/tools">
 
     <uses-permission android:name="android.permission.INTERNET" />
-
     <uses-permission android:name="android.permission.CAMERA" />
-    <uses-feature
-        android:name="android.hardware.camera"
-        android:required="false" />
-
+    <uses-feature android:name="android.hardware.camera" android:required="true" />
+    <uses-feature android:name="android.hardware.camera.autofocus" />
 
     <application
         android:networkSecurityConfig="@xml/network_security_config"
@@ -21,48 +18,25 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.Intellifit_trainer"
         tools:targetApi="31">
-        <activity
-            android:name=".StartWorkoutActivity"
-            android:exported="false" />
-        <activity
-            android:name=".MyWorkoutsActivity"
-            android:exported="false" />
-        <activity
-            android:name=".CreateWorkoutActivity"
-            android:exported="false" />
-        <activity
-            android:name=".LearnExercisesActivity"
-            android:exported="false" />
-        <activity
-            android:name=".MyProfileActivity"
-            android:exported="false" />
-        <activity
-            android:name=".SupportActivity"
-            android:exported="false" />
-        <activity
-            android:name=".LoggedInActivity"
-            android:exported="false" />
-        <activity
-            android:name=".ForgotPasswordActivity"
-            android:exported="false" />
-        <activity
-            android:name=".SignUpContinueActivity"
-            android:exported="false" />
-        <activity
-            android:name=".SignUpActivity"
-            android:exported="false" />
-        <activity
-            android:name=".MainActivity"
-            android:exported="false" />
+
         <activity
             android:name=".SplashActivity"
             android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
-
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+        <activity android:name=".StartWorkoutActivity" android:exported="false" />
+        <activity android:name=".MyWorkoutsActivity" android:exported="false" />
+        <activity android:name=".CreateWorkoutActivity" android:exported="false" />
+        <activity android:name=".LearnExercisesActivity" android:exported="false" />
+        <activity android:name=".MyProfileActivity" android:exported="false" />
+        <activity android:name=".SupportActivity" android:exported="false" />
+        <activity android:name=".LoggedInActivity" android:exported="false" />
+        <activity android:name=".ForgotPasswordActivity" android:exported="false" />
+        <activity android:name=".SignUpContinueActivity" android:exported="false" />
+        <activity android:name=".SignUpActivity" android:exported="false" />
+        <activity android:name=".MainActivity" android:exported="false" />
     </application>
-
 </manifest>

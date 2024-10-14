@@ -6,7 +6,6 @@ import androidx.appcompat.app.AppCompatActivity;
 import android.app.DatePickerDialog;
 import android.os.Bundle;
 import android.text.TextUtils;
-import android.view.View;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.EditText;
@@ -14,8 +13,6 @@ import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import com.google.android.gms.tasks.OnCompleteListener;
-import com.google.android.gms.tasks.Task;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.database.DataSnapshot;
@@ -43,8 +40,14 @@ public class MyProfileActivity extends AppCompatActivity {
 
         mAuth = FirebaseAuth.getInstance();
         FirebaseUser currentUser = mAuth.getCurrentUser();
-        databaseReference = FirebaseDatabase.getInstance().getReference("users").child(currentUser.getUid());
 
+        if (currentUser != null) {
+            databaseReference = FirebaseDatabase.getInstance().getReference("users").child(currentUser.getUid());
+        } else {
+            Toast.makeText(this, "User is not logged in.", Toast.LENGTH_SHORT).show();
+            finish(); // Close activity if user is not logged in
+            return;
+        }
 
         fullName = findViewById(R.id.myprofile_et_fullname);
         username = findViewById(R.id.myprofile_et_username);
@@ -77,18 +80,13 @@ public class MyProfileActivity extends AppCompatActivity {
 
         loadUserProfile();
 
-        update.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                saveUserProfile();
-            }
-        });
+        update.setOnClickListener(view -> saveUserProfile());
     }
 
     private void loadUserProfile() {
         databaseReference.addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
-            public void onDataChange(DataSnapshot dataSnapshot) {
+            public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
                 if (dataSnapshot.exists()) {
                     String str_fullName = dataSnapshot.child("fullName").getValue(String.class);
                     String str_username = dataSnapshot.child("username").getValue(String.class);
@@ -105,11 +103,19 @@ public class MyProfileActivity extends AppCompatActivity {
                     height.setText(str_height);
                     weight.setText(str_weight);
 
-                    ArrayAdapter<CharSequence> adapter = (ArrayAdapter<CharSequence>) gender.getAdapter();
-                    int spinnerPosition = adapter.getPosition(str_gender);
-                    gender.setSelection(spinnerPosition);
+                    // Set gender selection without unchecked cast
+                    if (str_gender != null) {
+                        ArrayAdapter<CharSequence> adapter = (ArrayAdapter<CharSequence>) gender.getAdapter();
+                        if (adapter != null) {
+                            int spinnerPosition = adapter.getPosition(str_gender);
+                            if (spinnerPosition >= 0) {
+                                gender.setSelection(spinnerPosition);
+                            }
+                        }
+                    }
                 }
             }
+
             @Override
             public void onCancelled(@NonNull DatabaseError databaseError) {
                 Toast.makeText(MyProfileActivity.this, "Failed to load user data: " + databaseError.getMessage(), Toast.LENGTH_SHORT).show();
@@ -172,15 +178,11 @@ public class MyProfileActivity extends AppCompatActivity {
         updates.put("weight", newWeight);
         updates.put("gender", newGender);
 
-
-        databaseReference.updateChildren(updates).addOnCompleteListener(new OnCompleteListener<Void>() {
-            @Override
-            public void onComplete(@NonNull Task<Void> task) {
-                if (task.isSuccessful()) {
-                    Toast.makeText(MyProfileActivity.this, "Profile updated successfully.", Toast.LENGTH_SHORT).show();
-                } else {
-                    Toast.makeText(MyProfileActivity.this, "Failed to update profile.", Toast.LENGTH_SHORT).show();
-                }
+        databaseReference.updateChildren(updates).addOnCompleteListener(task -> {
+            if (task.isSuccessful()) {
+                Toast.makeText(MyProfileActivity.this, "Profile updated successfully.", Toast.LENGTH_SHORT).show();
+            } else {
+                Toast.makeText(MyProfileActivity.this, "Failed to update profile.", Toast.LENGTH_SHORT).show();
             }
         });
     }
