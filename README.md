@@ -1,15 +1,3 @@
-# IntelliFit Trainer
+# To download the most recent APK of the IntelliFit Trainer app, please visit the Releases section on our GitHub page. You can find the latest version of the APK there, along with detailed release notes and information about what's new and improved.
 
-Welcome to the IntelliFit Trainer app! This application helps you stay fit and track your workouts.
-
-## Download
-
-You can download the latest APK from the releases section below:
-
-- [Download APK](https://github.com/MrPrajwal12/majorProject/tree/main/intellifit-trainer-host/app/release/app-release.apk)
-
-## Features
-
-- Track your workouts
-- Set fitness goals
-- Monitor progress
+- [Click here](https://github.com/MrPrajwal12/majorProject/releases/tag/v1.0.0)
