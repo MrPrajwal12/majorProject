@@ -4,7 +4,9 @@ import time
 from exercises import *
 
 # Capture the video or webcam feed
-cap = cv2.VideoCapture('PoseVideos/pushup_1.mp4')
+# Use the default webcam (usually the first camera)
+cap = cv2.VideoCapture(0)
+
 
 # Pose detector object
 detector = PoseDetector()
